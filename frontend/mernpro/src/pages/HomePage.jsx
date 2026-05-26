@@ -8,12 +8,13 @@ import {
 } from "../lib/api";
 import { Link } from "react-router";
 import { CheckCircleIcon, MapPinIcon, UserPlusIcon, UsersIcon, HeartIcon } from "lucide-react";
+import toast from "react-hot-toast";
 
 import { capitialize } from "../lib/utils";
 import { getLanguageFlag } from "../constant/getLanguageFlag";
 
 import FriendCard from "../components/FriendCard";
-
+import UserAvatar from "../components/UserAvatar";
 import NoFriendsFound from "../components/NoFriendsFound";
 
 const HomePage = () => {
@@ -37,14 +38,22 @@ const HomePage = () => {
 
   const { mutate: sendRequestMutation, isPending } = useMutation({
     mutationFn: sendFriendRequest,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["outgoingFriendReqs"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["outgoingFriendReqs"] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["friendRequests"] });
+      toast.success("Friend request sent!");
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || "Failed to send friend request");
+    },
   });
 
   useEffect(() => {
     const outgoingIds = new Set();
     if (outgoingFriendReqs && outgoingFriendReqs.length > 0) {
       outgoingFriendReqs.forEach((req) => {
-        outgoingIds.add(req.recipient._id);
+        outgoingIds.add(req.recipient._id.toString());
       });
       setOutgoingRequestsIds(outgoingIds);
     }
@@ -101,7 +110,7 @@ const HomePage = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {recommendedUsers.map((user) => {
-                const hasRequestBeenSent = outgoingRequestsIds.has(user._id);
+                const hasRequestBeenSent = outgoingRequestsIds.has(user._id.toString());
 
                 return (
                   <div
@@ -111,7 +120,7 @@ const HomePage = () => {
                     <div className="card-body p-5 space-y-4">
                       <div className="flex items-center gap-3">
                         <div className="avatar size-16 rounded-full">
-                          <img src={user.profilePic} alt={user.fullname} />
+                          <UserAvatar user={user} className="size-16 rounded-full object-cover" />
                         </div>
 
                         <div>

@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import { getLanguageFlag } from "../constant/getLanguageFlag";
+import UserAvatar from "./UserAvatar";
 
 const FriendCard = ({ friend }) => {
   return (
@@ -8,7 +9,7 @@ const FriendCard = ({ friend }) => {
         {/* USER INFO */}
         <div className="flex items-center gap-3 mb-3">
           <div className="avatar size-12">
-            <img src={friend.profilePic} alt={friend.fullname} />
+            <UserAvatar user={friend} className="size-12 rounded-full object-cover" />
           </div>
           <h3 className="font-semibold truncate">{friend.fullname}</h3>
         </div>

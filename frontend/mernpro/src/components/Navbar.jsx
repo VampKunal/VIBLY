@@ -2,6 +2,7 @@ import { Link, useLocation } from "react-router";
 import useAuthUser from "../hooks/useAuth";
 import { BellIcon, LogOutIcon, RadioIcon } from "lucide-react";
 import ThemeSelector from "./ThemeSelector";
+import UserAvatar from "./UserAvatar";
 import useLogout from "../hooks/useLogout";
 
 const Navbar = () => {
@@ -46,7 +47,7 @@ const Navbar = () => {
 
           <div className="avatar">
             <div className="w-9 rounded-full">
-              <img src={authUser?.profilePic} alt="User Avatar" rel="noreferrer" />
+              <UserAvatar user={authUser} className="w-9 h-9 rounded-full object-cover" />
             </div>
           </div>
 

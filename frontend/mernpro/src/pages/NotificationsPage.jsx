@@ -1,10 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { acceptFriendRequest, getFriendRequests } from "../lib/api";
 import { BellIcon, ClockIcon, MessageSquareIcon, UserCheckIcon, HeartIcon } from "lucide-react";
+import toast from "react-hot-toast";
 import NoNotificationsFound from "../components/NoNotificationsFound";
+import UserAvatar from "../components/UserAvatar";
+import useAuthUser from "../hooks/useAuth";
 
 const NotificationsPage = () => {
   const queryClient = useQueryClient();
+  const { authUser } = useAuthUser();
 
   const { data: friendRequests, isLoading } = useQuery({
     queryKey: ["friendRequests"],
@@ -16,11 +20,32 @@ const NotificationsPage = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["friendRequests"] });
       queryClient.invalidateQueries({ queryKey: ["friends"] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["outgoingFriendReqs"] });
+      toast.success("Friend request accepted!");
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || "Failed to accept request");
     },
   });
 
   const incomingRequests = friendRequests?.incomingRequests || [];
   const acceptedRequests = friendRequests?.acceptedRequests || [];
+
+  const getConnectionMessage = (request) => {
+    const iAccepted = request.recipient._id.toString() === authUser?._id?.toString();
+    const other = iAccepted ? request.sender : request.recipient;
+
+    if (iAccepted) {
+      return `You accepted ${other.fullname}'s friend request`;
+    }
+    return `${other.fullname} accepted your friend request`;
+  };
+
+  const getConnectionUser = (request) => {
+    const iAccepted = request.recipient._id.toString() === authUser?._id?.toString();
+    return iAccepted ? request.sender : request.recipient;
+  };
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
@@ -50,8 +75,11 @@ const NotificationsPage = () => {
                       <div className="card-body p-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <div className="avatar w-14 h-14 rounded-full bg-base-300">
-                              <img src={request.sender.profilePic} alt={request.sender.fullname} />
+                            <div className="avatar w-14 h-14 rounded-full bg-base-300 overflow-hidden">
+                              <UserAvatar
+                                user={request.sender}
+                                className="w-14 h-14 rounded-full object-cover"
+                              />
                             </div>
                             <div>
                               <h3 className="font-semibold">{request.sender.fullname}</h3>
@@ -81,7 +109,6 @@ const NotificationsPage = () => {
               </section>
             )}
 
-            {/* ACCEPTED REQS NOTIFICATONS */}
             {acceptedRequests.length > 0 && (
               <section className="space-y-4">
                 <h2 className="text-xl font-semibold flex items-center gap-2">
@@ -90,34 +117,36 @@ const NotificationsPage = () => {
                 </h2>
 
                 <div className="space-y-3">
-                  {acceptedRequests.map((notification) => (
-                    <div key={notification._id} className="card bg-base-200 shadow-sm">
-                      <div className="card-body p-4">
-                        <div className="flex items-start gap-3">
-                          <div className="avatar mt-1 size-10 rounded-full">
-                            <img
-                              src={notification.sender.profilePic}
-                              alt={notification.sender.fullname}
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="font-semibold">{notification.sender.fullname}</h3>
-                            <p className="text-sm my-1">
-                              {notification.sender.fullname} accepted your friend request
-                            </p>
-                            <p className="text-xs flex items-center opacity-70">
-                              <ClockIcon className="h-3 w-3 mr-1" />
-                              Recently
-                            </p>
-                          </div>
-                          <div className="badge badge-success">
-                            <MessageSquareIcon className="h-3 w-3 mr-1" />
-                            New Friend
+                  {acceptedRequests.map((notification) => {
+                    const otherUser = getConnectionUser(notification);
+
+                    return (
+                      <div key={notification._id} className="card bg-base-200 shadow-sm">
+                        <div className="card-body p-4">
+                          <div className="flex items-start gap-3">
+                            <div className="avatar mt-1 size-10 rounded-full overflow-hidden">
+                              <UserAvatar
+                                user={otherUser}
+                                className="size-10 rounded-full object-cover"
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <h3 className="font-semibold">{otherUser.fullname}</h3>
+                              <p className="text-sm my-1">{getConnectionMessage(notification)}</p>
+                              <p className="text-xs flex items-center opacity-70">
+                                <ClockIcon className="h-3 w-3 mr-1" />
+                                Recently
+                              </p>
+                            </div>
+                            <div className="badge badge-success">
+                              <MessageSquareIcon className="h-3 w-3 mr-1" />
+                              New Friend
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </section>
             )}

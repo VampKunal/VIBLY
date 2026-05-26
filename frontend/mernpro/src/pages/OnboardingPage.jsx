@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import useAuthUser from "../hooks/useAuth";
+import { generateAvatarUrl } from "../lib/avatar";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { completeOnboarding } from "../lib/api";
@@ -11,19 +12,36 @@ const OnboardingPage = () => {
   const queryClient = useQueryClient();
 
   const [formState, setFormState] = useState({
-    fullname: authUser?.fullname || "",
-    bio: authUser?.bio || "",
-    nativeLanguage: authUser?.nativeLanguage || "",
-    learningLanguage: authUser?.learningLanguage || "",
-    location: authUser?.location || "",
-    profilePic: authUser?.profilePic || "",
+    fullname: "",
+    bio: "",
+    nativeLanguage: "",
+    learningLanguage: "",
+    location: "",
+    profilePic: "",
   });
+
+  useEffect(() => {
+    if (!authUser) return;
+
+    setFormState((prev) => ({
+      fullname: prev.fullname || authUser.fullname || "",
+      bio: prev.bio || authUser.bio || "",
+      nativeLanguage: prev.nativeLanguage || authUser.nativeLanguage || "",
+      learningLanguage: prev.learningLanguage || authUser.learningLanguage || "",
+      location: prev.location || authUser.location || "",
+      profilePic:
+        prev.profilePic ||
+        authUser.profilePic ||
+        generateAvatarUrl(authUser.fullname, authUser._id),
+    }));
+  }, [authUser]);
 
   const { mutate: onboardingMutation, isPending } = useMutation({
     mutationFn: completeOnboarding,
     onSuccess: () => {
       toast.success("Profile onboarded successfully");
       queryClient.invalidateQueries({ queryKey: ["authUser"] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
     },
 
     onError: (error) => {
@@ -38,8 +56,8 @@ const OnboardingPage = () => {
   };
 
   const handleRandomAvatar = () => {
-    const idx = Math.floor(Math.random() * 100) + 1; // 1-100 included
-    const randomAvatar = `https://avatar.iran.liara.run/public/${idx}.png`;
+    const seed = `${formState.fullname || "user"}-${Date.now()}`;
+    const randomAvatar = generateAvatarUrl(formState.fullname || "User", seed);
 
     setFormState({ ...formState, profilePic: randomAvatar });
     toast.success("Random profile picture generated!");
