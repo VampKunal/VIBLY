@@ -6,20 +6,11 @@ const useSignUp = () => {
 
   const { mutate, isPending, error } = useMutation({
     mutationFn: signup,
-    onSuccess: (data, variables, context) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["authUser"] });
-      // Call the custom onSuccess if provided
-      if (context && context.onSuccess) {
-        context.onSuccess(data);
-      }
     },
   });
 
-  // Wrap mutate to accept an onSuccess callback
-  const signupMutation = (variables, { onSuccess } = {}) => {
-    mutate(variables, { context: { onSuccess } });
-  };
-
-  return { isPending, error, signupMutation };
+  return { isPending, error, signupMutation: mutate };
 };
 export default useSignUp;

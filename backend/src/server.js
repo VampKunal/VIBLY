@@ -1,4 +1,6 @@
 import express from "express";
+import dns from "dns";
+dns.setServers(["1.1.1.1", "8.8.8.8"]);
 import dotenv from "dotenv";
 import authRoutes from "./routes/auth.route.js" 
 import { connectDB } from "./lib/db.js"; // Assuming you have a db.js file for database connection
@@ -27,10 +29,10 @@ app.use("/api/users",userRoutes);
 app.use("/api/chat",chatRoutes); // Assuming you want to use the same routes for users
  // Connect to the database
 if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../frontend/dist")));
+  app.use(express.static(path.join(__dirname, "frontend/mernpro/dist")));
 
   app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
+    res.sendFile(path.join(__dirname, "frontend", "mernpro", "dist", "index.html"));
   });
 }
 app.listen(PORT, () => {

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { RadioIcon } from "lucide-react";
+import { RadioIcon, HeartIcon } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 
 import useSignUp from "../hooks/useSignUp.js";

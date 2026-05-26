@@ -31,13 +31,12 @@ export async function signup(req, res) {
     });
 
    try {
-     await upsertUser({
-      id: newUser._id.toString(),
-      name: newUser.fullname,
-      image: newUser.profilePic,
-     },
-     console.log("User upserted to Stream")
-    );
+      await upsertUser({
+        id: newUser._id.toString(),
+        name: newUser.fullname,
+        image: newUser.profilePic,
+      });
+      console.log("User upserted to Stream");
     
    } catch (error) {
       console.error("Error upserting user to Stream:", error);
@@ -156,10 +155,10 @@ export async function onboard(req, res) {
       });
         
       } catch (streamError) {
-        console.error("Error upserting user to Stream:", error);
+        console.error("Error upserting user to Stream:", streamError);
         return res.status(500).json({
           message: "Failed to update user in Stream",
-          error: error.message,
+          error: streamError.message,
         });
         
       }
