@@ -9,15 +9,18 @@ import userRoutes from "./routes/user.route.js"; // Assuming you have a user rou
 import chatRoutes from "./routes/chat.route.js"
 import cors from "cors";
 import path from "path";
+import { fileURLToPath } from "url";
 dotenv.config(); // ✅ now this works
 
 const PORT = process.env.PORT
 
-const __dirname = path.resolve();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const distPath = path.join(__dirname, "../../frontend/mernpro/dist");
 
 const app = express();
-app.use (cors({
-  origin: "http://localhost:5173", 
+app.use(cors({
+  origin: process.env.CLIENT_URL || "http://localhost:5173",
   credentials: true,
 }));
 
@@ -29,10 +32,10 @@ app.use("/api/users",userRoutes);
 app.use("/api/chat",chatRoutes); // Assuming you want to use the same routes for users
  // Connect to the database
 if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "frontend/mernpro/dist")));
+  app.use(express.static(distPath));
 
   app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "frontend", "mernpro", "dist", "index.html"));
+    res.sendFile(path.join(distPath, "index.html"));
   });
 }
 app.listen(PORT, () => {
